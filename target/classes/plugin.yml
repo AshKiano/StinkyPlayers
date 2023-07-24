@@ -1,0 +1,5 @@
+name: StinkyPlayers
+version: '1.2'
+main: com.ashkiano.stinkyplayers.StinkyPlayers
+api-version: '1.16'
+authors: [AshKiano]
