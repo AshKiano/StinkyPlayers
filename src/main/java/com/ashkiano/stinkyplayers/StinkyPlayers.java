@@ -29,6 +29,9 @@ public class StinkyPlayers extends JavaPlugin implements Listener {
         saveDefaultConfig();
 
         Metrics metrics = new Metrics(this, 19169);
+
+        // Print the donation message to the console
+        System.out.println("Thank you for using the StinkyPlayers plugin! If you enjoy using this plugin, please consider making a donation to support the development. You can donate at: https://paypal.me/josefvyskocil");
     }
 
     @EventHandler
