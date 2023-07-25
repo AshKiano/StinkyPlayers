@@ -1,2 +1,4 @@
 # Time before a player starts smelling in seconds
 timeBeforeSmelling: 600
+
+message: "You stink! Take a bath!"

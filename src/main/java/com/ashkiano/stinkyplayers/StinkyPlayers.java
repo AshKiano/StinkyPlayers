@@ -33,6 +33,7 @@ public class StinkyPlayers extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
+        String message = getConfig().getString("message", "You stink! Take a bath!"); // Default message is "You stink! Take a bath!". Message will be this if not specified otherwise in config.yml
         Player player = event.getPlayer();
         long timeBeforeSmelling = getConfig().getLong("timeBeforeSmelling", 600) * 1000; // Default is 600 seconds (10 minutes). Time is converted to milliseconds
         BlockData blockData = Material.SOUL_SAND.createBlockData();
@@ -46,7 +47,7 @@ public class StinkyPlayers extends JavaPlugin implements Listener {
                     nearbyPlayer.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, 20 * 10, 1));
                 }
             }
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(ChatColor.RED + "You stink! Take a bath!")); // Sends the action bar message
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(ChatColor.RED + message)); // Sends the action bar message
         }
     }
 
