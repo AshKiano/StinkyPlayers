@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+//TODO opravit chyby v konzoli, když se vejde do netheru nebo endu
 //TODO přidat reset, když hráč umře
 //TODO přidat configurovatelnost hlášky a proměnnou na její vypnutí
 //TODO přidat zprávu co se vypíše hráčům v okolí aby věěli, jaký hráč smrdí
@@ -46,7 +47,9 @@ public class StinkyPlayers extends JavaPlugin implements Listener {
         } else if (lastBathTime.getOrDefault(player.getUniqueId(), 0L) + timeBeforeSmelling < System.currentTimeMillis()) {
             player.getWorld().spawnParticle(Particle.FALLING_DUST, player.getLocation(), 10, 0.5, 0.5, 0.5, 0, blockData);
             for (Player nearbyPlayer : Bukkit.getOnlinePlayers()) {
-                if (nearbyPlayer.getLocation().distance(player.getLocation()) <= 10 && !nearbyPlayer.getUniqueId().equals(player.getUniqueId())) {
+                if (nearbyPlayer.getWorld().equals(player.getWorld()) &&
+                        nearbyPlayer.getLocation().distance(player.getLocation()) <= 10 &&
+                        !nearbyPlayer.getUniqueId().equals(player.getUniqueId())) {
                     nearbyPlayer.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, 20 * 10, 1));
                 }
             }
