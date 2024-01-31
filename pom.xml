@@ -6,7 +6,7 @@
 
     <groupId>com.ashkiano</groupId>
     <artifactId>StinkyPlayers</artifactId>
-    <version>1.5</version>
+    <version>1.7</version>
     <packaging>jar</packaging>
 
     <name>StinkyPlayers</name>
