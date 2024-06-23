@@ -1,4 +1,9 @@
-# Time before a player starts smelling in seconds
-timeBeforeSmelling: 600
-
-message: "You stink! Take a bath!"
+Settings:
+  # Time before a player starts smelling in seconds
+  Time-Before-Smelling: 600
+  Stink-Message:
+    Enabled: true
+    Message: "&cYou stink! Take a bath!"
+  Stink-Message-Other:
+    Enabled: true
+    Message: "&c%player% near you hasn't taken a bath, it's making you nauseous!"

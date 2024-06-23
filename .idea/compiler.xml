@@ -9,8 +9,5 @@
         <module name="StinkyPlayers" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="StinkyPlayers" target="1.8" />
-    </bytecodeTargetLevel>
   </component>
 </project>
