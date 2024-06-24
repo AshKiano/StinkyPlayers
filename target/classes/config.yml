@@ -3,7 +3,7 @@ Settings:
   Time-Before-Smelling: 600
   Stink-Message:
     Enabled: true
-    Message: "You stink! Take a bath!"
+    Message: "&cYou stink! Take a bath!"
   Stink-Message-Other:
     Enabled: true
-    Message: "%player% near you hasn't taken a bath, it's making you nauseous!"
+    Message: "&c%player% near you hasn't taken a bath, it's making you nauseous!"
