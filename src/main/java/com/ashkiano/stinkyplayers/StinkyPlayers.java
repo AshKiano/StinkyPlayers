@@ -107,14 +107,13 @@ public class StinkyPlayers extends JavaPlugin implements Listener {
         }
     }
     private long getLastBathTime(Player player) {
-        YamlConfiguration lastBathConfig= new YamlConfiguration();
-        YamlConfiguration.loadConfiguration(lastBathFile);
+        YamlConfiguration lastBathConfig = YamlConfiguration.loadConfiguration(lastBathFile);
         return lastBathConfig.getLong(String.valueOf(player.getUniqueId()));
     }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        if(getLastBathTime(event.getPlayer())==0){
+        if(getLastBathTime(event.getPlayer())==0L){
             setLastBathTime(event.getPlayer());
         }
     }
@@ -141,6 +140,7 @@ public class StinkyPlayers extends JavaPlugin implements Listener {
             if(highestBlockLocation<= player.getLocation().getY()){
                 lastBathTime.put(player.getUniqueId(), System.currentTimeMillis());
                 setLastBathTime(player);
+                return;
             }
         }
 
