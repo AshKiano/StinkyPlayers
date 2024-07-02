@@ -3,3 +3,7 @@ version: '${project.version}'
 main: com.ashkiano.stinkyplayers.StinkyPlayers
 api-version: '1.20'
 authors: [ AshKiano, BitByLogic ]
+permissions:
+  stinky.bypass:
+    description: Players with this permission will never smell
+    default: op
