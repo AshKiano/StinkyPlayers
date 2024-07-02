@@ -106,13 +106,17 @@ public class StinkyPlayers extends JavaPlugin implements Listener {
             Bukkit.getConsoleSender().sendMessage(String.valueOf(e));
         }
     }
+    private long getLastBathTime(Player player) {
+        YamlConfiguration lastBathConfig= new YamlConfiguration();
+        YamlConfiguration.loadConfiguration(lastBathFile);
+        return lastBathConfig.getLong(String.valueOf(player.getUniqueId()));
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        if(!playerHasPermission(event.getPlayer())){
+        if(getLastBathTime(event.getPlayer())==0){
             setLastBathTime(event.getPlayer());
         }
-
     }
 
     @EventHandler
