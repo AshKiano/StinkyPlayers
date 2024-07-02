@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-//TODO add bypass permission so these players will never smell
 public class StinkyPlayers extends JavaPlugin implements Listener {
 
     private final Map<UUID, Long> lastBathTime = new HashMap<>();
