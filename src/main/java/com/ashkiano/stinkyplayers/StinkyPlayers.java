@@ -144,7 +144,7 @@ public class StinkyPlayers extends JavaPlugin implements Listener {
             }
         }
 
-        if ((lastBathTime.getOrDefault(player.getUniqueId(), 0L) + timeBeforeSmelling) > System.currentTimeMillis()) {
+        if ((getLastBathTime(player) + timeBeforeSmelling) > System.currentTimeMillis()) {
             return;
         }
 
