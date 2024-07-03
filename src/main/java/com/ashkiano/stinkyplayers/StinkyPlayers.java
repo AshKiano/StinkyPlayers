@@ -30,10 +30,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-//TODO add bypass permission so these players will never smell
 public class StinkyPlayers extends JavaPlugin implements Listener {
 
-    private final Map<UUID, Long> lastBathTime = new HashMap<>();
+    private final Map<String, Long> lastBathTime = new HashMap<>();
     private final File lastBathFile = new File(this.getDataFolder(), "lastBath.yml");
 
     @Override
@@ -96,30 +95,27 @@ public class StinkyPlayers extends JavaPlugin implements Listener {
         return player.hasPermission("stinky.bypass");
     }
 
-    private void setLastBathTime(Player player) {
+    private void setLastBathTime(Player player) throws IOException {
         YamlConfiguration lastBathConfig= new YamlConfiguration();
-        YamlConfiguration.loadConfiguration(lastBathFile);
-        lastBathConfig.set(String.valueOf(player.getUniqueId()), System.currentTimeMillis());
-        try{
-            lastBathConfig.save(lastBathFile);
-        }catch(IOException e){
-            Bukkit.getConsoleSender().sendMessage(String.valueOf(e));
-        }
+        lastBathConfig.set("players."+player.getDisplayName(), System.currentTimeMillis());
+        lastBathConfig.save(lastBathFile);
     }
     private long getLastBathTime(Player player) {
         YamlConfiguration lastBathConfig = YamlConfiguration.loadConfiguration(lastBathFile);
-        return lastBathConfig.getLong(String.valueOf(player.getUniqueId()));
+        return lastBathConfig.getLong("players."+player.getDisplayName());
     }
 
     @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        if(getLastBathTime(event.getPlayer())==0L){
-            setLastBathTime(event.getPlayer());
-        }
+    public void onPlayerJoin(PlayerJoinEvent event) throws IOException {
+        //if(getLastBathTime(event.getPlayer())==0L){
+        lastBathTime.put(event.getPlayer().getDisplayName(), System.currentTimeMillis());
+
+            //setLastBathTime(event.getPlayer());
+        //}
     }
 
     @EventHandler
-    public void onPlayerMove(PlayerMoveEvent event) {
+    public void onPlayerMove(PlayerMoveEvent event) throws IOException {
         Player player = event.getPlayer();
         if(!playerHasPermission(player)){
 
@@ -129,8 +125,8 @@ public class StinkyPlayers extends JavaPlugin implements Listener {
         // CONDITIONS TO RESET BATHTIME
         //Is on Water
         if (player.getLocation().getBlock().getType() == Material.WATER) {
-            lastBathTime.put(player.getUniqueId(), System.currentTimeMillis());
-            setLastBathTime(player);
+            lastBathTime.put(player.getDisplayName(), System.currentTimeMillis());
+            //setLastBathTime(player);
             return;
         }
 
@@ -138,13 +134,13 @@ public class StinkyPlayers extends JavaPlugin implements Listener {
         if(player.getWorld().isThundering() || player.getWorld().hasStorm()){
             int highestBlockLocation = player.getWorld().getHighestBlockYAt(player.getLocation());
             if(highestBlockLocation<= player.getLocation().getY()){
-                lastBathTime.put(player.getUniqueId(), System.currentTimeMillis());
-                setLastBathTime(player);
+                lastBathTime.put(player.getDisplayName(), System.currentTimeMillis());
+                //setLastBathTime(player);
                 return;
             }
         }
 
-        if ((getLastBathTime(player) + timeBeforeSmelling) > System.currentTimeMillis()) {
+        if ((lastBathTime.get(player.getDisplayName())/*(getLastBathTime(player)*/ + timeBeforeSmelling) > System.currentTimeMillis()) {
             return;
         }
 
@@ -179,10 +175,10 @@ public class StinkyPlayers extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void onDeath(PlayerDeathEvent event) {
+    public void onDeath(PlayerDeathEvent event) throws IOException {
         if(!playerHasPermission(event.getEntity())){
-            lastBathTime.put(event.getEntity().getUniqueId(), System.currentTimeMillis());
-            setLastBathTime(event.getEntity());
+            lastBathTime.put(event.getEntity().getDisplayName(), System.currentTimeMillis());
+            //setLastBathTime(event.getEntity());
         }
     }
 }
