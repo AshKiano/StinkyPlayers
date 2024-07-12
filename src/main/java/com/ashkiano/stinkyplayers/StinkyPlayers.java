@@ -27,8 +27,6 @@ import java.util.*;
 
 public class StinkyPlayers extends JavaPlugin implements Listener {
 
-    private final Map<String, Long> lastBathTime = new HashMap<>();
-
     private StinkyDB stinkyDB;
 
     long timeBeforeSmelling = getConfig().getLong("Settings.Time-Before-Smelling", 600) * 1000; // Default is 600 seconds (10 minutes). Time is converted to milliseconds
@@ -127,7 +125,6 @@ public class StinkyPlayers extends JavaPlugin implements Listener {
             // CONDITIONS TO RESET BATHTIME
             //Is on Water
             if (player.getLocation().getBlock().getType() == Material.WATER) {
-                lastBathTime.put(player.getDisplayName(), System.currentTimeMillis());
                 stinkyDB.setStinkyTime(player, System.currentTimeMillis());
                 return;
             }
@@ -136,7 +133,6 @@ public class StinkyPlayers extends JavaPlugin implements Listener {
             if(player.getWorld().isThundering() || player.getWorld().hasStorm()){
                 int highestBlockLocation = player.getWorld().getHighestBlockYAt(player.getLocation());
                 if(highestBlockLocation<= player.getLocation().getY()){
-                    lastBathTime.put(player.getDisplayName(), System.currentTimeMillis());
                     stinkyDB.setStinkyTime(player, System.currentTimeMillis());
                     return;
                 }
