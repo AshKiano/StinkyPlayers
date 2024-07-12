@@ -11,7 +11,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -23,25 +22,20 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.sql.SQLException;
+import java.util.*;
 
 public class StinkyPlayers extends JavaPlugin implements Listener {
 
     private final Map<String, Long> lastBathTime = new HashMap<>();
-    private final File lastBathFile = new File(this.getDataFolder(), "lastBath.yml");
+
+    private StinkyDB stinkyDB;
+
+    long timeBeforeSmelling = getConfig().getLong("Settings.Time-Before-Smelling", 600) * 1000; // Default is 600 seconds (10 minutes). Time is converted to milliseconds
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
-
-        if(!lastBathFile.exists()){
-            saveResource("lastBath.yml", false);
-        }
 
         getServer().getPluginManager().registerEvents(this, this);
 
@@ -77,6 +71,14 @@ public class StinkyPlayers extends JavaPlugin implements Listener {
                 .onFail((commandSenders, e) -> {
                 }).checkNow();
 
+        try{
+            stinkyDB = new StinkyDB(getDataFolder().getAbsolutePath()+ "/stinky.db");
+        }catch (SQLException e){
+            e.printStackTrace();
+            Bukkit.getConsoleSender().sendMessage("Failed to get database! " + e.getMessage());
+            Bukkit.getPluginManager().disablePlugin(this);
+        }
+
         // Print the donation message to the console
         Bukkit.getScheduler().runTaskLater(this, () -> Bukkit.getConsoleSender().sendMessage(
                 ChatColor.GOLD + "Thank you for using the StinkyPlayers plugin!",
@@ -84,6 +86,21 @@ public class StinkyPlayers extends JavaPlugin implements Listener {
                 ChatColor.GOLD + "Please consider making a donation to support the development!",
                 ChatColor.GOLD + "You can donate at: " + ChatColor.GREEN + "https://donate.ashkiano.com"
         ), 20);
+
+        // Verify all players every 5 seconds
+        Bukkit.getScheduler().runTaskTimer(this, () -> {
+            List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
+            for(Player player : players){
+                try {
+                    if((stinkyDB.getStinkyTime(player) + timeBeforeSmelling) < System.currentTimeMillis()){
+                        nearbyStinkyEffect(player);
+                    }
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }, 20L * 10L /* 10 sec */, 20L * 5L /* 5 seconds interval after initial 10 sec*/);
+
     }
 
     private String color(String message) {
@@ -95,55 +112,44 @@ public class StinkyPlayers extends JavaPlugin implements Listener {
         return player.hasPermission("stinky.bypass");
     }
 
-    private void setLastBathTime(Player player) throws IOException {
-        YamlConfiguration lastBathConfig= new YamlConfiguration();
-        lastBathConfig.set("players."+player.getDisplayName(), System.currentTimeMillis());
-        lastBathConfig.save(lastBathFile);
-    }
-    private long getLastBathTime(Player player) {
-        YamlConfiguration lastBathConfig = YamlConfiguration.loadConfiguration(lastBathFile);
-        return lastBathConfig.getLong("players."+player.getDisplayName());
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) throws SQLException {
+        if(!stinkyDB.checkPlayer(event.getPlayer())){
+            stinkyDB.addPlayer(event.getPlayer(), System.currentTimeMillis());
+        }
     }
 
     @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) throws IOException {
-        //if(getLastBathTime(event.getPlayer())==0L){
-        lastBathTime.put(event.getPlayer().getDisplayName(), System.currentTimeMillis());
-
-            //setLastBathTime(event.getPlayer());
-        //}
-    }
-
-    @EventHandler
-    public void onPlayerMove(PlayerMoveEvent event) throws IOException {
+    public void onPlayerMove(PlayerMoveEvent event) throws SQLException {
         Player player = event.getPlayer();
         if(!playerHasPermission(player)){
 
-
-        long timeBeforeSmelling = getConfig().getLong("Settings.Time-Before-Smelling", 600) * 1000; // Default is 600 seconds (10 minutes). Time is converted to milliseconds
-
-        // CONDITIONS TO RESET BATHTIME
-        //Is on Water
-        if (player.getLocation().getBlock().getType() == Material.WATER) {
-            lastBathTime.put(player.getDisplayName(), System.currentTimeMillis());
-            //setLastBathTime(player);
-            return;
-        }
-
-        //Is on rain
-        if(player.getWorld().isThundering() || player.getWorld().hasStorm()){
-            int highestBlockLocation = player.getWorld().getHighestBlockYAt(player.getLocation());
-            if(highestBlockLocation<= player.getLocation().getY()){
+            // CONDITIONS TO RESET BATHTIME
+            //Is on Water
+            if (player.getLocation().getBlock().getType() == Material.WATER) {
                 lastBathTime.put(player.getDisplayName(), System.currentTimeMillis());
-                //setLastBathTime(player);
+                stinkyDB.setStinkyTime(player, System.currentTimeMillis());
                 return;
             }
-        }
 
-        if ((lastBathTime.get(player.getDisplayName())/*(getLastBathTime(player)*/ + timeBeforeSmelling) > System.currentTimeMillis()) {
-            return;
-        }
+            //Is on rain
+            if(player.getWorld().isThundering() || player.getWorld().hasStorm()){
+                int highestBlockLocation = player.getWorld().getHighestBlockYAt(player.getLocation());
+                if(highestBlockLocation<= player.getLocation().getY()){
+                    lastBathTime.put(player.getDisplayName(), System.currentTimeMillis());
+                    stinkyDB.setStinkyTime(player, System.currentTimeMillis());
+                    return;
+                }
+            }
 
+            if ((stinkyDB.getStinkyTime(player) + timeBeforeSmelling) > System.currentTimeMillis()) {
+                return;
+            }
+            nearbyStinkyEffect(player);
+        }
+    }
+
+    public void nearbyStinkyEffect(Player player){
         BlockData blockData = Material.SOUL_SAND.createBlockData();
 
         player.getWorld().spawnParticle(Particle.FALLING_DUST, player.getLocation(), 10, 0.5, 0.5, 0.5, 0, blockData);
@@ -171,14 +177,22 @@ public class StinkyPlayers extends JavaPlugin implements Listener {
                 TextComponent.fromLegacyText(
                         color(getConfig().getString("Settings.Stink-Message.Message", "You stink! Take a bath!"))
                 )); // Sends the action bar message
-        }
     }
 
     @EventHandler
-    public void onDeath(PlayerDeathEvent event) throws IOException {
+    public void onDeath(PlayerDeathEvent event) throws SQLException {
         if(!playerHasPermission(event.getEntity())){
-            lastBathTime.put(event.getEntity().getDisplayName(), System.currentTimeMillis());
-            //setLastBathTime(event.getEntity());
+            stinkyDB.setStinkyTime(event.getEntity(),0);
+        }
+    }
+
+    @Override
+    public void onDisable(){
+        Bukkit.getConsoleSender().sendMessage("An error has ocurred and StinkyPlayers plugin have been disabled!");
+        try{
+            stinkyDB.closeDBCon();
+        }catch(SQLException e){
+            e.printStackTrace();
         }
     }
 }
